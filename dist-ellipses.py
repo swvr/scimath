@@ -33,11 +33,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
 
-fig = plt.figure(figsize=(8, 5))
-gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
-ax0 = plt.subplot(gs[0])
-ax1 = plt.subplot(gs[1])
-
 # ----------
 
 # a is the radius along the x-axis (sometimes shown as h)
@@ -61,26 +56,17 @@ def check_for_issues():
             "The horizontal and vertical radii are equal and " +
             "will result in a divide by zero runtime error." + os.linesep)
 
-
-check_for_issues()
-
 # ----------
 
-# plot a line at set angle
+# Calculate y for a line passing through x at an angle t.
 # return y
 def fx(x, t):
     trad = math.radians(t)
     return math.tan(trad)*x
 
-vectfx = np.vectorize(fx, excluded='x')
-
-x1 = np.arange(-8.0, 9.0, 1.0)
-ax0.plot(x1, fx(x1, lT), color='red')
-
 # ----------
 
 # rational representation: https://en.wikipedia.org/wiki/Ellipse
-# Display the inner ellipse before it's rotated
 # This method was used just for fun.
 def rrx(u, a):
     x = a * (1 - u**2) / (u**2 + 1)
@@ -90,9 +76,6 @@ def rry(u, b):
     y = (2*b*u) / (u**2 + 1)
     return y
 
-u = np.arange(-1000, 1000, 0.1)
-ax0.plot(rrx(u, a2), rry(u, b2), color='lightgray')
-
 # ----------
 
 # Standard parametric representation: https://en.wikipedia.org/wiki/Ellipse
@@ -101,12 +84,6 @@ def prx(t, a):
 
 def pry(t, b):
     return b * (math.sin(math.radians(t)))
-
-vectprx = np.vectorize(prx, excluded='a')
-vectpry = np.vectorize(pry, excluded='b')
-
-t = np.arange(0, 360, 0.1)
-ax0.plot(vectprx(t, a1), vectpry(t, b1), color='orange')
 
 # ----------
 
@@ -123,15 +100,6 @@ def rotatey(t, a, b, r):
     y = (a * math.cos(trad) * math.sin(rrad)) + (b * math.sin(trad) * math.cos(rrad))
     return y
 
-vectrotx = np.vectorize(rotatex, excluded=['a', 'b', 'r'])
-vectroty = np.vectorize(rotatey, excluded=['a', 'b', 'r'])
-
-t = np.arange(0, 360, 0.1)
-ax0.plot(vectrotx(t, a2, b2, T), vectroty(t, a2, b2, T), color='blue')
-
-
-# plot 2 points along the line of intersection
-
 # ----------
 
 # The intersection of a line and an ellipse
@@ -144,13 +112,6 @@ def lex(t, a, b):
     if lT > 90 and lT < 270:
         x*=-1
     return x
-
-vectlex = np.vectorize(lex, excluded=['a', 'b'])
-
-x=lex(lT, a1, b1)
-y=fx(x, lT)
-# should be a green dot on the orange ellipse intersecting the red line
-ax0.plot(x, y, 'ro', color='green')
 
 # ----------
 
@@ -173,39 +134,79 @@ def lrex(t, a, b, r):
     return x
 
 
+def main():
     
-vectlrex = np.vectorize(lrex, excluded=['a', 'b', 'r'])
+    check_for_issues()
+    
+    # setup the plot
+    plt.figure(figsize=(8, 5))
+    gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+    ax0 = plt.subplot(gs[0])
+    ax1 = plt.subplot(gs[1])
+    
+    # plot a line at set angle
+    vectfx = np.vectorize(fx, excluded='x')
+    x1 = np.arange(-8.0, 9.0, 1.0)
+    ax0.plot(x1, fx(x1, lT), color='red')
+    
+    # Display the inner ellipse before it's rotated
+    u = np.arange(-1000, 1000, 0.1)
+    ax0.plot(rrx(u, a2), rry(u, b2), color='lightgray')
+    
+    # plot the first ellipse (not rotated)
+    vectprx = np.vectorize(prx, excluded='a')
+    vectpry = np.vectorize(pry, excluded='b')
+    t = np.arange(0, 360, 0.1)
+    ax0.plot(vectprx(t, a1), vectpry(t, b1), color='orange')
+    
+    # plot the second ellipse, rotated
+    vectrotx = np.vectorize(rotatex, excluded=['a', 'b', 'r'])
+    vectroty = np.vectorize(rotatey, excluded=['a', 'b', 'r'])
+    t = np.arange(0, 360, 0.1)
+    ax0.plot(vectrotx(t, a2, b2, T), vectroty(t, a2, b2, T), color='blue')
+    
+    # plot 2 points along the line of intersection
+    
+    # plot the point of intersection with the first ellipse (not rotated)
+    vectlex = np.vectorize(lex, excluded=['a', 'b'])
+    x=lex(lT, a1, b1)
+    y=fx(x, lT)
+    # should be a green dot on the orange ellipse intersecting the red line
+    ax0.plot(x, y, 'ro', color='green')
+    
+    # plot the point of intersection with the second ellipse (rotated)
+    vectlrex = np.vectorize(lrex, excluded=['a', 'b', 'r'])
+    x=lrex(lT, a2, b2, T)
+    y=fx(x, lT)
+    print ("%d,%d" % (x,y))
+    # should be a black dot on the blue ellipse intersecting the red line
+    ax0.plot(x, y, 'ro', color='black')
+    
+    # ----------
+    
+    # calculate the difference between the two ellipses
+    t = np.arange(0, 360, 0.1)
+    
+    xnorm=vectlex(t, a1, b1)
+    ynorm=vectfx(xnorm, t)
+    
+    xrot=vectlrex(t, a2, b2, T)
+    yrot=vectfx(xrot, t)
+    
+    # find the diff and when the inner is outside the outer ellipse preserve the sign
+    # (divide by zero is possible and should be caught)
+    vecthypot = np.vectorize(math.hypot)
+    diff = vecthypot(xnorm-xrot, ynorm-yrot) * ((xnorm-xrot) / abs(xnorm-xrot))
+    
+    ax1.plot(t, diff, color='pink')
+    
+    # ----------
+    
+    ax0.set_aspect('equal', 'box')
+    
+    plt.tight_layout()
+    plt.show()
 
-x=lrex(lT, a2, b2, T)
-y=fx(x, lT)
-print ("%d,%d" % (x,y))
-ax0.plot(x, y, 'ro', color='black')
 
-# ----------
-
-# calculate the difference between the two ellipses
-t = np.arange(0, 360, 0.1)
-
-xnorm=vectlex(t, a1, b1)
-ynorm=vectfx(xnorm, t)
-
-xrot=vectlrex(t, a2, b2, T)
-yrot=vectfx(xrot, t)
-
-# find the diff and when the inner is outside the outer ellipse preserve the sign
-# (divide by zero is possible and should be caught)
-vecthypot = np.vectorize(math.hypot)
-diff = vecthypot(xnorm-xrot, ynorm-yrot) * ((xnorm-xrot) / abs(xnorm-xrot))
-
-ax1.plot(t, diff, color='pink')
-
-# ----------
-
-ax0.set_aspect('equal', 'box')
-
-plt.tight_layout()
-plt.show()
-
-
-#if __name__ == "__main__":
-#    main()
+if __name__ == "__main__":
+    main()
