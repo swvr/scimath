@@ -1,6 +1,6 @@
 # Science/Math Scripts
 
-## dist-ellipses.py
+## Distance between two ellipses: dist-ellipses.py
 This script calculates the distance between two concentric ellipses, one of 
 which can be rotated.
 
