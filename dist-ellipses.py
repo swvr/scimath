@@ -148,9 +148,13 @@ def main():
     ax0 = plt.subplot(gs[0])
     ax1 = plt.subplot(gs[1])
     
+    ax0.set_title("Concentric Ellipses")
+    ax1.set_title("Distance between Ellipses")
+    ax1.set_xlabel("Degrees")
+
     # plot a line at set angle
     vect_get_position_y_at_angle = np.vectorize(get_position_y_at_angle, excluded='x')
-    x1 = np.arange(-8.0, 9.0, 1.0)
+    x1 = np.arange(-1*a1, a1+1, 1.0)
     ax0.plot(x1, vect_get_position_y_at_angle(x1, lT), color='red')
     
     # Display the second (inner) ellipse before it's rotated
@@ -160,13 +164,13 @@ def main():
     # plot the first ellipse (not rotated)
     vect_get_ellipse_x_standard = np.vectorize(get_ellipse_x_standard, excluded='a')
     vect_get_ellipse_y_standard = np.vectorize(get_ellipse_y_standard, excluded='b')
-    t = np.arange(0, 360, 0.1)
+    t = np.arange(0, 360, 0.01)
     ax0.plot(vect_get_ellipse_x_standard(t, a1), vect_get_ellipse_y_standard(t, b1), color='orange')
     
     # plot the second ellipse, rotated
     vect_get_ellipse_x_rotated = np.vectorize(get_ellipse_x_rotated, excluded=['a', 'b', 'r'])
     vect_get_ellipse_y_rotated = np.vectorize(get_ellipse_y_rotated, excluded=['a', 'b', 'r'])
-    t = np.arange(0, 360, 0.1)
+    t = np.arange(0, 360, 0.01)
     ax0.plot(vect_get_ellipse_x_rotated(t, a2, b2, T), vect_get_ellipse_y_rotated(t, a2, b2, T), color='blue')
 
     # plot 2 points along the line of intersection
@@ -182,7 +186,7 @@ def main():
     vect_get_line_ellipse_x_intercept_rotated = np.vectorize(get_line_ellipse_x_intercept_rotated, excluded=['a', 'b', 'r'])
     x=get_line_ellipse_x_intercept_rotated(lT, a2, b2, T)
     y=get_position_y_at_angle(x, lT)
-    print ("%d,%d" % (x,y))
+    # print ("%d,%d" % (x,y))
     # should be a black dot on the blue ellipse intersecting the red line
     ax0.plot(x, y, 'ro', color='black')
     
