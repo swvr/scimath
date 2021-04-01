@@ -66,6 +66,10 @@ def get_position_y_at_angle(x, t):
     trad = math.radians(t)
     return math.tan(trad)*x
 
+def get_position_x_at_angle(y, t):
+    trad = math.radians(t)
+    return y / math.tan(trad)
+
 # ----------
 
 # rational representation: https://en.wikipedia.org/wiki/Ellipse
@@ -108,35 +112,53 @@ def get_ellipse_y_rotated(t, a, b, r):
 
 # The intersection of a line and an ellipse
 def get_line_ellipse_x_intercept_standard(t, a, b):
-    trad = math.radians(t)
-    n=a**2 * b**2
-    d=b**2 + (a**2 * math.tan(trad)**2)
-    x = math.sqrt(n/d)
-    # make sure we're in the right quadrant
-    if lT > 90 and lT < 270:
-        x*=-1
-    return x
+    # trad = math.radians(t)
+    # n=a**2 * b**2
+    # d=b**2 + (a**2 * math.tan(trad)**2)
+    # x = math.sqrt(n/d)
+    # # make sure we're in the right quadrant
+    # if lT > 90 and lT < 270:
+    #     x*=-1
+    # return x
+    return get_line_ellipse_x_intercept_rotated(t, a, b, 0)
 
 # ----------
 
-# The intersection of line and rotated ellipse
+# The intersection of line and rotated ellipse (at the origin)
 # http://quickcalcbasic.com/ellipse%20line%20intersection.pdf
 def get_line_ellipse_x_intercept_rotated(t, a, b, r):
     trad = math.radians(t)
     rrad = math.radians(r)
     m = math.tan(trad)
 
-    A = b**2 * (math.cos(rrad)**2 + 2 * m * math.cos(rrad) * math.sin(rrad) + m**2 * math.sin(rrad)**2) \
-        + a**2 * (m**2 * math.cos(rrad)**2 - 2 * m * math.cos(rrad) * math.sin(rrad) + math.sin(rrad)**2)
-    B = 0 # all drops out b/c b1=0 in y=mx+b1                                                                                                      
-    C = -1 * a**2 * b**2
-    # quadratic eq.
-    x = (-1 * B + math.sqrt(B**2 - 4 * A * C)) / (2 * A)
-    # make sure we're in the right quadrant
+    if t == 90 or r == 270:
+        x = get_line_ellipse_y_intercept_rotated(t, a, b, r, 0)
+    else:
+        A = b**2 * (math.cos(rrad)**2 + 2 * m * math.cos(rrad) * math.sin(rrad) + m**2 * math.sin(rrad)**2) \
+            + a**2 * (m**2 * math.cos(rrad)**2 - 2 * m * math.cos(rrad) * math.sin(rrad) + math.sin(rrad)**2)
+        B = 0 # all drops out b/c b1=0 in y=mx+b1
+        C = -1 * a**2 * b**2
+        # quadratic eq.
+        x = (-1 * B + math.sqrt(B**2 - 4 * A * C)) / (2 * A)
+
+    # make sure we're in the correct quadrant
     if lT > 90 and lT < 270:
         x*=-1
     return x
 
+# ---------
+
+def get_line_ellipse_y_intercept_rotated(t, a, b, r, x):
+     rrad = math.radians(r)
+
+     A = b**2 * math.sin(rrad)**2 + a**2 * math.cos(rrad)**2
+     B = 2 * x * math.cos(rrad) * math.sin(b**2 - a**2)
+     C = x**2 * (b**2 * math.cos(rrad)**2 + a**2 * math.sin(rrad)**2) - a**2 * b**2
+     # quadratic eq.
+     y = (-1 * B + math.sqrt(B**2 - 4 * A * C)) / (2 * A)
+     return get_position_x_at_angle(y, t)
+
+# --------
 
 def main():
     
@@ -152,12 +174,15 @@ def main():
     ax1.set_title("Distance between Ellipses")
     ax1.set_xlabel("Degrees")
 
+    ax0.set_xlim(-1*(a1+1), a1+1)
+    ax0.set_ylim(-1*(b1+1), b1+1)
+
     # plot a line at set angle
     vect_get_position_y_at_angle = np.vectorize(get_position_y_at_angle, excluded='x')
     x1 = np.arange(-1*a1, a1+1, 1.0)
     ax0.plot(x1, vect_get_position_y_at_angle(x1, lT), color='red')
     
-    # Display the second (inner) ellipse before it's rotated
+    # Display the second (inner) ellipse before it's rotated (just for fun)
     u = np.arange(-1000, 1000, 0.1)
     ax0.plot(get_ellipse_x_rational(u, a2), get_ellipse_y_rational(u, b2), color='lightgray')
     
@@ -179,6 +204,7 @@ def main():
     vect_get_line_ellipse_x_intercept_standard = np.vectorize(get_line_ellipse_x_intercept_standard, excluded=['a', 'b'])
     x=get_line_ellipse_x_intercept_standard(lT, a1, b1)
     y=get_position_y_at_angle(x, lT)
+    print ("green: %f,%f" % (x,y))
     # should be a green dot on the orange ellipse intersecting the red line
     ax0.plot(x, y, 'ro', color='green')
     
@@ -186,7 +212,7 @@ def main():
     vect_get_line_ellipse_x_intercept_rotated = np.vectorize(get_line_ellipse_x_intercept_rotated, excluded=['a', 'b', 'r'])
     x=get_line_ellipse_x_intercept_rotated(lT, a2, b2, T)
     y=get_position_y_at_angle(x, lT)
-    # print ("%d,%d" % (x,y))
+    print ("black: %f,%f" % (x,y))
     # should be a black dot on the blue ellipse intersecting the red line
     ax0.plot(x, y, 'ro', color='black')
     
