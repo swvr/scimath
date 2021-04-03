@@ -142,7 +142,7 @@ def get_line_ellipse_x_intercept_rotated(t, a, b, r):
         x = (-1 * B + math.sqrt(B**2 - 4 * A * C)) / (2 * A)
 
     # make sure we're in the correct quadrant
-    if lT > 90 and lT < 270:
+    if lT > 90 and lT <= 270:
         x*=-1
     return x
 
